@@ -1,0 +1,8 @@
+substitutions:
+  name: freyaclock
+  weekdayalarm: "7"
+  weekendalarm: "8"
+  evening: "18"
+
+<<: !include ./noahclock.yaml
+

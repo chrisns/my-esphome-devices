@@ -1,0 +1,137 @@
+substitutions:
+  name: noahclock
+  weekdayalarm: "7"
+  weekendalarm: "8"
+  evening: "18"
+
+esphome:
+  name: ${name}
+  platform: ESP32
+  board: esp32dev
+
+<<: !include ./common.yaml
+<<: !include ./bluetooth_proxy.yaml
+
+logger:
+  level: DEBUG
+
+globals:
+  - id: evening
+    type: float
+    restore_value: no
+    initial_value: ${evening}
+
+  - id: progress
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+  - id: alarmclock
+    type: float
+    restore_value: no
+    initial_value: ${weekdayalarm}
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/London
+    on_time_sync:
+      then:
+        - if:
+            condition:
+              - light.is_off: led_matrix_light
+            then:
+            - light.turn_on: led_matrix_light
+
+    on_time:
+      - days_of_week: SAT-SUN
+        then:
+          - globals.set:
+              id: alarmclock
+              value: ${weekendalarm}
+
+      - days_of_week: MON-FRI
+        then:
+          - globals.set:
+              id: alarmclock
+              value: ${weekdayalarm}
+                        
+      - seconds: "*"
+        then:
+          - lambda: |
+              float hour, alarm, remaining, total;
+              int percent;
+
+              hour = id(sntp_time).now().hour + (0.0166666666667 * id(sntp_time).now().minute); // as a percentage
+              
+              alarm = id(alarmclock);
+
+              total = 24.00 - (float)id(evening) + (float)id(alarmclock);
+
+              if (hour >= id(evening)) {
+                alarm += 24;
+              }
+
+              remaining = alarm-hour;
+              percent = (100/total) * remaining;
+
+              ESP_LOGD("remaining", "hour: %f total: %f alarm:%f remain: %f perecent: %d", hour, total, alarm, remaining, percent);
+
+              id(progress) = percent;
+
+font:
+  - id: tinyfont
+    file: "lexis.ttf"
+    size: 8
+    glyphs: \'!"%()+,-_.:*=°?~# 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO13
+    num_leds: 256
+    rgb_order: GRB
+    name: "Clock Led Matrix"
+    id: led_matrix_light
+    default_transition_length: 0s
+    color_correct: [50%, 50%, 50%]
+    flash_transition_length: 0s
+    restore_mode: ALWAYS_OFF
+ 
+display:
+  - platform: addressable_light
+    id: led_matrix_display
+    addressable_light_id: led_matrix_light
+    width: 32
+    height: 8
+    rotation: 0°
+    pixel_mapper: |-
+      if (x % 2 == 0) {
+        return (x * 8) + y;
+      }
+      return (x * 8) + (7 - y);
+    update_interval: 64ms
+    lambda: |-
+
+          auto color = Color(0, 0, 0);
+          char str[8];
+
+          if (id(progress) > 0 ) {
+            color = Color(56, 0, 0);
+            it.line(0, 0, floor(0.32 * id(progress)), 0, color);
+          } else {
+            color = Color(0, 255, 0);
+          }
+
+          time_t currTime = id(sntp_time).now().timestamp;
+          strftime(str, sizeof(str), "%I:%M", gmtime(&currTime));
+
+          it.print(
+            1,
+            1, 
+            id(tinyfont),
+            color, 
+            TextAlign::TOP_LEFT,
+            str
+          );
