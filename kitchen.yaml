@@ -1,0 +1,18 @@
+substitutions:
+  name: kitchen
+
+esphome:
+  name: ${name}
+
+<<: !include ./common.yaml
+<<: !include ./bluetooth_proxy.yaml
+
+
+esp32:
+  board: az-delivery-devkit-v4
+  framework:
+    type: esp-idf
+
+button:
+  - platform: restart
+    name: "Restart"
