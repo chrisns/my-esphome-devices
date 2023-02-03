@@ -42,11 +42,6 @@ button:
       - delay: 10s
       - lambda: id(led_matrix_text).publish_state(" ");
 
-sensor:
-  - platform: uptime
-    name: Uptime
-    update_interval: 60s
-
 font:
   - id: tinyfont
     file: "lexis.ttf"
