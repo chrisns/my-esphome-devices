@@ -1,0 +1,106 @@
+esphome:
+  name: garageopener
+  platform: ESP8266
+  board: esp01
+  on_boot:
+    - switch.turn_on: lock
+
+
+wifi:
+  use_address: garageopener.iot.cns.me
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+button:
+  - platform: restart
+    name: "Restart"
+
+cover:
+  - platform: template
+    name: "Garage shutter"
+    id: "garage_shutter"
+    has_position: false
+    assumed_state: true
+    open_action:
+      - if:
+          condition:
+            switch.is_off: lock
+          then:
+            - uart.write: [0xA0, 0x01, 0x01, 0xA2]
+            - delay: 250ms
+      - uart.write: [0xA0, 0x01, 0x00, 0xA1]
+    close_action:
+      - uart.write: [0xA0, 0x02, 0x01, 0xA3]
+      - delay: 250ms
+      - uart.write: [0xA0, 0x02, 0x00, 0xA2]
+    stop_action:
+      - uart.write: [0xA0, 0x03, 0x01, 0xA4]
+      - delay: 250ms
+      - uart.write: [0xA0, 0x03, 0x00, 0xA3]
+    optimistic: false
+
+api:
+  password: !secret device_password
+  encryption:
+    key: !secret encryption_key
+
+sensor:
+  - platform: uptime
+    name: Uptime
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+
+uart:
+  baud_rate: 115200 # speed to STC15L101EW
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+
+switch:
+  - platform: template
+    name: 'Garage shutter locked'
+    id: lock
+    optimistic: true
+    icon: mdi:lock
+    
+  - platform: template
+    name: 'Relay 1'
+    id: relay1
+    turn_on_action:
+      - uart.write: [0xA0, 0x01, 0x01, 0xA2]
+    turn_off_action:
+      - uart.write: [0xA0, 0x01, 0x00, 0xA1]
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    disabled_by_default: true
+  - platform: template
+    name: 'Relay 2'
+    id: relay2
+    turn_on_action:
+      - uart.write: [0xA0, 0x02, 0x01, 0xA3]
+    turn_off_action:
+      - uart.write: [0xA0, 0x02, 0x00, 0xA2]
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    disabled_by_default: true
+  - platform: template
+    name: 'Relay 3'
+    id: relay3
+    turn_on_action:
+      - uart.write: [0xA0, 0x03, 0x01, 0xA4]
+    turn_off_action:
+      - uart.write: [0xA0, 0x03, 0x00, 0xA3]
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    disabled_by_default: true
+  - platform: template
+    name: 'Relay 4'
+    id: relay4
+    turn_on_action:
+      - uart.write: [0xA0, 0x04, 0x01, 0xA5]
+    turn_off_action:
+      - uart.write: [0xA0, 0x04, 0x00, 0xA4]
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    disabled_by_default: true
+
