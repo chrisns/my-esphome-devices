@@ -11,10 +11,6 @@ wifi:
   password: !secret wifi_password
   reboot_timeout: 1800s
 
-
-ota:
-  password: !secret device_password
-
 api:
   password: !secret device_password
 
