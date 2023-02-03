@@ -10,6 +10,11 @@ api:
   encryption:
     key: !secret encryption_key
 
+esphome:
+  name: ${name}
+  platform: ESP32
+  board: esp32dev
+
 ota:
   password: !secret device_password
 
@@ -25,3 +30,7 @@ sensor:
 button:
   - platform: restart
     name: Restart
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time

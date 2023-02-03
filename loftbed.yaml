@@ -1,8 +1,5 @@
 substitutions:
   name: loftbed
 
-esphome:
-  name: ${name}
-
 <<: !include ./common.yaml
 <<: !include ./bluetooth_proxy.yaml
