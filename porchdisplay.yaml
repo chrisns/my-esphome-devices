@@ -1,0 +1,133 @@
+substitutions:
+  name: porchdisplay
+  xscrollpadding: "4" # in pix
+
+esphome:
+  name: ${name}
+  platform: ESP32
+  board: esp32dev
+  on_boot:
+    - lambda: id(led_matrix_text).publish_state("ON");
+    - delay: 2s
+    - lambda: id(led_matrix_text).publish_state("");
+
+<<: !include ./common.yaml
+<<: !include ./bluetooth_proxy.yaml
+
+button:
+  - platform: restart
+    name: "Restart"
+
+  - platform: template
+    name: Door Open Message
+    id: openmsg
+    on_press:
+      - lambda: id(led_matrix_text).publish_state("HELLO THERE");
+      - delay: 2s
+      - repeat:
+          count: 20
+          then: 
+            - lambda: id(led_matrix_text).publish_state("OPEN");
+            - delay: 500ms
+            - lambda: id(led_matrix_text).publish_state("DOOR");
+            - delay: 500ms
+            - lambda: id(led_matrix_text).publish_state("NOW");
+            - delay: 500ms
+      - lambda: id(led_matrix_text).publish_state(" ");
+
+  - platform: template
+    name: Please wait
+    on_press:
+      - lambda: id(led_matrix_text).publish_state("PLEASE WAIT");
+      - delay: 10s
+      - lambda: id(led_matrix_text).publish_state(" ");
+
+sensor:
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+
+font:
+  - id: tinyfont
+    file: "lexis.ttf"
+    size: 8
+    glyphs: \'!"%()+,-_.:*=°?~# 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+text_sensor:
+  - platform: homeassistant
+    name: "Matrix Text"
+    entity_id: input_text.porch_led_matrix_text
+    id: led_matrix_text
+    filters:
+      - to_upper:
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO13
+    num_leds: 256
+    rgb_order: GRB
+    name: "Porch Led Matrix"
+    id: led_matrix_light
+    default_transition_length: 0s
+    color_correct: [50%, 50%, 50%]
+    restore_mode: ALWAYS_ON
+ 
+display:
+  - platform: addressable_light
+    id: led_matrix_display
+    addressable_light_id: led_matrix_light
+    width: 32
+    height: 8
+    rotation: 180°
+    pixel_mapper: |-
+      if (x % 2 == 0) {
+        return (x * 8) + y;
+      }
+      return (x * 8) + (7 - y);
+    update_interval: 64ms
+    lambda: |-
+          static int16_t xpos = it.get_width();
+          const char * text = id(led_matrix_text).state.c_str();
+ 
+
+          float red, green, blue;
+          // use any of the provided current_values methods
+          id(led_matrix_light)->current_values_as_rgb(&red, &green, &blue);
+
+
+          // Convert to 0-255
+          int redValue, greenValue, blueValue;
+          redValue = floor(red * 255);
+          greenValue = floor(green * 255);
+          blueValue = floor(blue * 255);
+
+
+
+          auto color = Color(redValue, greenValue, blueValue);
+          int x_start, y_start;
+          int width, height;
+ 
+          it.get_text_bounds(
+            0, 0, text, id(tinyfont), 
+            TextAlign::TOP_LEFT,
+            &x_start, &y_start, &width, &height
+          ); 
+ 
+          if(xpos < -1 * (width + $xscrollpadding)) {
+            xpos = it.get_width();
+          }
+ 
+          if(width <= it.get_width()) {
+            xpos = 0;
+          }
+ 
+          it.print(
+            xpos,
+            0, 
+            id(tinyfont),
+            color, 
+            TextAlign::TOP_LEFT,
+            text
+          ); 
+          xpos--;
