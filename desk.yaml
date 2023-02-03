@@ -1,0 +1,281 @@
+substitutions:
+  min_height: "62.1" # Min height + 0.1  (original one)
+  max_height: "125.1" # Max height - 0.1
+  name: desk
+  
+esphome:
+  name: ${name}
+  platform: ESP32
+  board: esp32dev
+  includes:
+    - desk.h
+  libraries:
+    - chrisns/LoctekMotion_IoT_esphome
+  on_boot:
+    - button.press: button_empty
+
+
+button:
+  - platform: restart
+    name: "Restart"
+
+  - platform: template
+    name: "Preset 1"
+    id: button_preset1
+    icon: mdi:numeric-1-box
+    on_press:
+     - logger.log: "Executing Preset 1 command"
+     - switch.turn_on: virtual_screen
+     - uart.write:
+         id: desk_uart
+         data: [0x9b, 0x06, 0x02, 0x04, 0x00, 0xac, 0xa3, 0x9d]
+
+  - platform: template
+    name: "Preset 2"
+    id: button_preset2
+    icon: mdi:numeric-2-box
+    on_press:
+      - logger.log: "Executing Preset 2 command"
+      - switch.turn_on: virtual_screen
+      - uart.write:
+          id: desk_uart
+          data: [0x9b, 0x06, 0x02, 0x08, 0x00, 0xac, 0xa6, 0x9d]
+
+  - platform: template
+    name: "Preset 3"
+    id: button_preset3
+    icon: mdi:numeric-3-box
+    on_press:
+      - logger.log: "Executing Preset 3 command"
+      - switch.turn_on: virtual_screen
+      - uart.write:
+          id: desk_uart
+          data: [0x9b, 0x06, 0x02, 0x10, 0x00, 0xac, 0xac, 0x9d]
+
+  - platform: template
+    name: "Empty command"
+    id: button_empty
+    on_press:
+      - logger.log: "EMPTY"
+      - switch.turn_on: virtual_screen
+      - delay: 100ms
+      - uart.write:
+          id: desk_uart
+          data: [0x9b, 0x06, 0x02, 0x00, 0x00, 0x6c, 0xa1, 0x9d]
+
+  - platform: template
+    name: "Down"
+    id: button_down
+    icon: mdi:arrow-down-bold
+    on_press:
+      - logger.log: "DOWN"
+      - switch.turn_on: virtual_screen
+      - delay: 100ms
+      - uart.write:
+          id: desk_uart
+          data: [0x9b, 0x06, 0x02, 0x02, 0x00, 0x0c, 0xa0, 0x9d]
+
+  - platform: template
+    name: "Up"
+    id: button_up
+    icon: mdi:arrow-up-bold
+    on_press:
+      - logger.log: "UP"
+      - switch.turn_on: virtual_screen
+      - delay: 100ms
+      - uart.write:
+          id: desk_uart
+          data: [0x9b, 0x06, 0x02, 0x01, 0x00, 0xfc, 0xa0, 0x9d]
+
+  - platform: template
+    name: "Reset Desk"
+    on_press:
+      - switch.turn_on: virtual_screen
+      - delay: 100ms
+      # - repeat:
+      #     count: 100
+      #     then:
+      #       - logger.log: "Executing down command"
+      #       - uart.write:
+      #           id: desk_uart
+      #           data: [0x9b, 0x06, 0x02, 0x02, 0x00, 0x0c, 0xa0, 0x9d]
+      #       - delay: 50ms
+      - while:
+          condition:
+            sensor.in_range:
+              id: desk_height
+              below: 60
+          then:
+            - logger.log: "RESETING Executing down command"
+            - uart.write:
+                id: desk_uart
+                data: [0x9b, 0x06, 0x02, 0x02, 0x00, 0x0c, 0xa0, 0x9d]
+            # - delay: 250ms
+            - delay: 150ms
+
+# bluetooth_proxy:
+#   active: true
+web_server:
+
+uart:
+  - id: desk_uart
+    baud_rate: 9600
+    tx_pin: GPIO17
+    rx_pin: GPIO16
+  - id: keypad_uart
+    baud_rate: 9600
+    tx_pin: GPIO1
+    rx_pin: GPIO3
+
+sensor:
+  - platform: wifi_signal
+    id: wifi_signal_db
+    name: "WiFi Signal"
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+
+  - platform: custom
+    lambda: |-
+      auto desk_height_sensor = new DeskHeightSensor(id(desk_uart));
+      App.register_component(desk_height_sensor);
+      return {desk_height_sensor};
+    sensors:
+      id: "desk_height"
+      name: Desk Height
+      unit_of_measurement: cm
+      accuracy_decimals: 1
+      icon: "mdi:counter"
+      on_value:
+        then:
+          - cover.template.publish:
+             id: desk
+             position: !lambda |-
+                 float position = (float(x) - float(${min_height})) / (float(${max_height}) - float(${min_height}));
+                 return position;
+
+  - platform: custom
+    lambda: |-
+      auto desk_keypad_sensor = new DeskKeypad(id(keypad_uart));
+      App.register_component(desk_keypad_sensor);
+      return {desk_keypad_sensor};
+    sensors:
+      internal: false
+      id: "desk_command"
+      name: Desk command
+      icon: "mdi:counter"
+      on_value:
+        then:
+          lambda: |-
+            if(id(desk_command).state == 1) {
+              id(button_up).press();
+              id(desk).open();
+            } 
+            else if(id(desk_command).state == 2) {
+              id(desk).close();
+            }
+            else if(id(desk_command).state == 3) {
+              id(button_preset1).press();
+            }
+            else if(id(desk_command).state == 4) {
+              id(button_preset2).press();
+            }
+            else if(id(desk_command).state == 5) {
+              id(button_preset3).press();
+            }
+            else if(id(desk_command).state == 8) {
+              id(desk).stop();
+            }
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO12
+    device_class: motion
+    publish_initial_state: true
+    name: Motion
+    filters:
+      - delayed_off: 10000ms
+
+  - platform: gpio
+    id: pin
+    pin: GPIO14
+    publish_initial_state: true
+    internal: true
+    filters:
+      - delayed_off: 2000ms
+
+  - platform: copy
+    source_id: pin
+    device_class: presence
+    publish_initial_state: true
+    name: Presence
+    filters:
+      - delayed_on: 2000ms
+
+  - platform: gpio
+    name: "Screen"
+    id: "screen"
+    pin: GPIO22
+    on_press:
+      then:
+        - switch.turn_on: virtual_screen
+    on_release:
+      then:
+        - switch.turn_off: virtual_screen
+
+switch:
+  - platform: gpio
+    name: "Virtual Screen"
+    id: "virtual_screen"
+    pin:
+      number: GPIO23
+      mode: OUTPUT
+    restore_mode: ALWAYS_OFF
+    internal: false
+    on_turn_on:
+     - delay: 12s  
+     - if:
+        condition:
+         binary_sensor.is_off : screen
+        then:
+        - switch.turn_off: virtual_screen
+
+cover:
+  - platform: template
+    name: "Desk"
+    id: "desk"
+    has_position: true
+    assumed_state: true
+    open_action: # Move desk up
+      - while:
+          condition:
+            sensor.in_range:
+              id: desk_height
+              below: 125.0
+          then:
+          - logger.log: "Executing up command"
+          - button.press: button_up
+          - delay: 150ms
+    close_action: # Move desk down
+      - while:
+          condition:
+            sensor.in_range:
+              id: desk_height
+              above: ${min_height} 
+          then:
+          - logger.log: "Executing down command"
+          - button.press: button_down
+          - delay: 150ms
+
+<<: !include ./common.yaml
