@@ -115,7 +115,7 @@ button:
 
 # bluetooth_proxy:
 #   active: true
-web_server:
+# web_server:
 
 uart:
   - id: desk_uart
