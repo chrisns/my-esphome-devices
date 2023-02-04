@@ -5,7 +5,6 @@ wifi:
   reboot_timeout: 1800s
   
 api:
-  password: !secret device_password
   reboot_timeout: 0s
   encryption:
     key: !secret encryption_key
