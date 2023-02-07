@@ -41,20 +41,29 @@ time:
             condition:
               - light.is_off: led_matrix_light
             then:
-            - light.turn_on: led_matrix_light
+              - light.turn_on: led_matrix_light
 
     on_time:
-      - seconds: "*"
+      - seconds: "0"
         then:
           - lambda: |
-              float hour, alarm, remaining, total, evening;
-              int percent;
+              float hour, alarm, remaining, total, evening, percent;
+              int day_of_week;
 
               evening = (float)id(evening_time).state;
-              hour = id(sntp_time).now().hour + (0.0166666666667 * id(sntp_time).now().minute); // as a percentage
-              
-              // if sunday-thursday after evening set the alarm time to the weekday alarm
-              if ( (id(sntp_time).now().day_of_week <= 5) && (hour >= evening) ) {
+              hour = id(sntp_time).now().hour + (0.0166666666667 * id(sntp_time).now().minute);
+              day_of_week = id(sntp_time).now().day_of_week;
+
+              // if its sunday-thursday & evening or if its mon-fri
+              // sun = 1
+              // mon = 2
+              // tue = 3
+              // wed = 4
+              // thu = 5
+              // fri = 6
+              // sat = 7
+
+              if ( (day_of_week <= 5 && hour >= evening) || (day_of_week >= 2 && day_of_week <= 6 )) {
                 alarm = id(weekday_alarm).state;
               } else {
                 alarm = id(weekend_alarm).state;
@@ -69,7 +78,7 @@ time:
               remaining = alarm-hour;
               percent = (100/total) * remaining;
 
-              ESP_LOGD("remaining", "hour: %f total: %f alarm:%f remain: %f perecent: %d", hour, total, alarm, remaining, percent);
+              ESP_LOGD("remaining", "hour: %f total: %f alarm:%f remain: %f perecent: %f, evening: %f", hour, total, alarm, remaining, percent, evening);
               
               id(progress) = percent;
 
