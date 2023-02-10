@@ -2,10 +2,10 @@ wifi:
   use_address: ${name}.iot.cns.me
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  reboot_timeout: 1800s
+  reboot_timeout: 15min
   
 api:
-  reboot_timeout: 0s
+  reboot_timeout: 15min
   encryption:
     key: !secret encryption_key
 
