@@ -16,7 +16,7 @@ globals:
   - id: progress
     type: int
     restore_value: no
-    initial_value: '0'
+    initial_value: '100'
 
 sensor:
   - platform: uptime
@@ -44,7 +44,7 @@ time:
               - light.turn_on: led_matrix_light
 
     on_time:
-      - seconds: "0"
+      - seconds: "*"
         then:
           - lambda: |
               float hour, alarm, remaining, total, evening, percent;
