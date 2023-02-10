@@ -1,0 +1,55 @@
+substitutions:
+  name: airquality
+
+<<: !include ./common.yaml
+<<: !include ./bluetooth_proxy.yaml
+
+uart:
+  - id: pmsx
+    tx_pin: GPIO13
+    rx_pin: GPIO12
+    baud_rate: 9600
+
+sensor:
+  - platform: uptime
+    name: Uptime
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+  - platform: pmsx003
+    type: pmsx003
+    uart_id: pmsx
+    pm_1_0:
+      name: "PM <1.0µm"
+      filters:
+        - debounce: 10s
+    pm_2_5:
+      name: "PM <2.5µm"
+      filters:
+        - debounce: 10s
+    pm_10_0:
+      name: "PM <10.0µm"
+      filters:
+        - debounce: 10s
+    # temperature:
+    #   name: "Temperature"
+    #   filters:
+    #     - debounce: 10s
+    # humidity:
+    #   name: "Humidity"
+    #   filters:
+    #     - debounce: 10s
+    # formaldehyde:
+    #   name: "Formaldehyde"
+    #   filters:
+    #     - debounce: 10s
+    update_interval: 30s
+
+switch:
+  - platform: gpio
+    pin: 
+      number: GPIO14
+    id: pms_set
+    name: "Start measuring"
+
+
