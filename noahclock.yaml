@@ -121,19 +121,18 @@ number:
     icon: mdi:clock-start
 
 light:
-  - platform: fastled_clockless
-    icon: mdi:clock-digital
-    chipset: WS2812B
+  - platform: neopixelbus
+    type: GRB
+    variant: WS2812
     pin: GPIO13
     num_leds: 256
-    rgb_order: GRB
     name: "Clock Led Matrix"
     id: led_matrix_light
     default_transition_length: 0s
     color_correct: [50%, 50%, 50%]
-    flash_transition_length: 0s
-    restore_mode: ALWAYS_OFF
- 
+    restore_mode: ALWAYS_ON
+    icon: mdi:clock-digital
+
 display:
   - platform: addressable_light
     id: led_matrix_display
@@ -146,7 +145,6 @@ display:
         return (x * 8) + y;
       }
       return (x * 8) + (7 - y);
-    update_interval: 64ms
     lambda: |-
         auto color = Color(0, 0, 0);
         char str[8];
