@@ -1,0 +1,41 @@
+substitutions:
+  name: boiler
+
+esphome:
+  name: ${name}
+  platform: ESP32
+  board: esp32dev
+
+<<: !include ./common.yaml
+<<: !include ./bluetooth_proxy.yaml
+
+logger:
+  level: DEBUG
+
+
+sensor:
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+  - platform: bmp280
+    i2c_id: bus_a
+    temperature:
+      name: "Temperature mono"
+    address: 0x76
+  - platform: bmp280
+    i2c_id: bus_b
+    temperature:
+      name: "Temperature colour"
+    address: 0x76
+
+i2c:
+  - id: bus_a
+    sda: 21
+    scl: 22
+    scan: false
+    frequency: 10kHz
+  - id: bus_b
+    sda: 5
+    scl: 18
+    scan: false
+    frequency: 10kHz
