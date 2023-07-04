@@ -1,0 +1,12 @@
+name: "esphome"
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+jobs:
+  compile:
+    name: esphome
+    uses: docker://ghcr.io/esphome/esphome
+    with:
+      args: compile *.yaml
