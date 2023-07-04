@@ -30,6 +30,16 @@ sensor:
     icon: mdi:percent
     lambda: |
       return id(progress) < 0 ? 0 : id(progress);
+  - platform: bmp280
+    temperature:
+      name: "Temperature"
+    address: 0x76
+
+i2c:
+  sda: 18
+  scl: 5
+  scan: true
+
 
 time:
   - platform: sntp
