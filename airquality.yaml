@@ -1,8 +1,8 @@
 substitutions:
   name: airquality
 
-<<: !include ./common.yaml
-<<: !include ./bluetooth_proxy.yaml
+<<: !include ./includes/common.yaml
+<<: !include ./includes/bluetooth_proxy.yaml
 
 uart:
   - id: pmsx

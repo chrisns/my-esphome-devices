@@ -11,8 +11,8 @@ esphome:
     - delay: 2s
     - lambda: id(led_matrix_text).publish_state("");
 
-<<: !include ./common.yaml
-<<: !include ./bluetooth_proxy.yaml
+<<: !include ./includes/common.yaml
+<<: !include ./includes/bluetooth_proxy.yaml
 
 button:
   - platform: restart

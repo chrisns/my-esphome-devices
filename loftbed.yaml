@@ -1,5 +1,5 @@
 substitutions:
   name: loftbed
 
-<<: !include ./common.yaml
-<<: !include ./bluetooth_proxy.yaml
+<<: !include ./includes/common.yaml
+<<: !include ./includes/bluetooth_proxy.yaml

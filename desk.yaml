@@ -278,4 +278,5 @@ cover:
           - button.press: button_down
           - delay: 150ms
 
-<<: !include ./common.yaml
+<<: !include ./includes/common.yaml
+<<: !include ./includes/bluetooth_proxy.yaml

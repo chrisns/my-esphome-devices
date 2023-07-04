@@ -6,8 +6,8 @@ esphome:
   platform: ESP32
   board: esp32dev
 
-<<: !include ./common.yaml
-<<: !include ./bluetooth_proxy.yaml
+<<: !include ./includes/common.yaml
+<<: !include ./includes/bluetooth_proxy.yaml
 
 logger:
   level: DEBUG
