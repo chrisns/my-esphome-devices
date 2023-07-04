@@ -7,6 +7,6 @@ on:
 jobs:
   compile:
     name: esphome
-    uses: docker://ghcr.io/esphome/esphome@2023.6.4
+    uses: docker://ghcr.io/esphome/esphome@sha256:0ecfa69cadcefac093b97010e1da40e96b102b892bd5b4dc273a9b47e3af243d
     with:
       args: compile *.yaml
