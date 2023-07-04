@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     name: esphome
     steps:
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       - uses: docker://ghcr.io/esphome/esphome:2023.6.4
         with:
           args: compile *.yaml
