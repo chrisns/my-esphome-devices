@@ -5,12 +5,12 @@ substitutions:
 
 esphome:
   name: ${name}
-  includes:
-    - desk.h
-  libraries:
-    - chrisns/LoctekMotion_IoT_esphome
-  # on_boot:
-  #   - button.press: button_empty
+
+external_components:
+  - source: components
+    components: [desk_keypad]
+  - source: github://iMicknl/LoctekMotion_IoT@main
+    components: [loctekmotion_desk_height]
 
 button:
   - platform: restart
@@ -92,14 +92,6 @@ button:
     on_press:
       - switch.turn_on: virtual_screen
       - delay: 100ms
-      # - repeat:
-      #     count: 100
-      #     then:
-      #       - logger.log: "Executing down command"
-      #       - uart.write:
-      #           id: desk_uart
-      #           data: [0x9b, 0x06, 0x02, 0x02, 0x00, 0x0c, 0xa0, 0x9d]
-      #       - delay: 50ms
       - while:
           condition:
             sensor.in_range:
@@ -110,12 +102,7 @@ button:
             - uart.write:
                 id: desk_uart
                 data: [0x9b, 0x06, 0x02, 0x02, 0x00, 0x0c, 0xa0, 0x9d]
-            # - delay: 250ms
             - delay: 150ms
-
-# bluetooth_proxy:
-#   active: true
-# web_server:
 
 uart:
   - id: desk_uart
@@ -146,56 +133,43 @@ sensor:
     unit_of_measurement: "Signal %"
     entity_category: "diagnostic"
 
-  - platform: custom
-    lambda: |-
-      auto desk_height_sensor = new DeskHeightSensor(id(desk_uart));
-      App.register_component(desk_height_sensor);
-      return {desk_height_sensor};
-    sensors:
-      id: "desk_height"
-      name: Desk Height
-      unit_of_measurement: cm
-      accuracy_decimals: 1
-      icon: "mdi:counter"
-      on_value:
-        then:
-          - cover.template.publish:
-              id: desk
-              position: !lambda |-
-                float position = (float(x) - float(${min_height})) / (float(${max_height}) - float(${min_height}));
-                return position;
+  # Use the loctekmotion_desk_height component instead of custom code
+  - platform: loctekmotion_desk_height
+    id: desk_height
+    name: "Desk Height"
+    uart_id: desk_uart
+    on_value:
+      then:
+        - lambda: |-
+            float position = (id(desk_height).state - ${min_height}) / (${max_height} - ${min_height});
+            id(desk).position = position;
 
-  - platform: custom
-    lambda: |-
-      auto desk_keypad_sensor = new DeskKeypad(id(keypad_uart));
-      App.register_component(desk_keypad_sensor);
-      return {desk_keypad_sensor};
-    sensors:
-      internal: false
-      id: "desk_command"
-      name: Desk command
-      icon: "mdi:counter"
-      on_value:
-        then:
-          lambda: |-
-            if(id(desk_command).state == 1) {
+  # Use our new desk_keypad external component 
+  - platform: desk_keypad
+    id: desk_command
+    name: "Desk command"
+    uart_id: keypad_uart
+    on_value:
+      then:
+        - lambda: |-
+            if(x == 1) { // Up
               id(button_up).press();
-              id(desk).open();
+              id(desk).make_call().set_command_open().perform();
             } 
-            else if(id(desk_command).state == 2) {
-              id(desk).close();
+            else if(x == 2) { // Down
+              id(desk).make_call().set_command_close().perform();
             }
-            else if(id(desk_command).state == 3) {
+            else if(x == 3) { // Preset1
               id(button_preset1).press();
             }
-            else if(id(desk_command).state == 4) {
+            else if(x == 4) { // Preset2
               id(button_preset2).press();
             }
-            else if(id(desk_command).state == 5) {
+            else if(x == 5) { // Preset3
               id(button_preset3).press();
             }
-            else if(id(desk_command).state == 8) {
-              id(desk).stop();
+            else if(x == 8) { // Empty/Stop
+              id(desk).make_call().set_command_stop().perform();
             }
 
 binary_sensor:
@@ -243,13 +217,6 @@ switch:
       mode: OUTPUT
     restore_mode: ALWAYS_OFF
     internal: false
-    # on_turn_on:
-    #   - delay: 12s
-    #   - if:
-    #       condition:
-    #         binary_sensor.is_off: screen
-    #       then:
-    #         - switch.turn_off: virtual_screen
 
 cover:
   - platform: template
@@ -285,3 +252,4 @@ esp32:
   board: esp32dev
   framework:
     type: arduino
+
