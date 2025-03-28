@@ -11,11 +11,15 @@ api:
 
 esphome:
   name: ${name}
-  platform: ESP32
+
+esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
 
 ota:
-  password: !secret device_password
+  - platform: esphome
+    password: !secret device_password
 
 logger:
   level: DEBUG

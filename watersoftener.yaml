@@ -1,0 +1,48 @@
+substitutions:
+  name: watersoftener
+
+<<: !include ./includes/common.yaml
+<<: !include ./includes/bluetooth_proxy.yaml
+
+sensor:
+  - platform: vl53l0x
+    name: "VL53L0x Distance"
+    address: 0x29
+    update_interval: 60s
+    long_range: true
+    timeout: 10000ms
+    # enable_pin: GPO
+
+  - platform: pulse_counter
+    id: water_flow_meter
+    name: "Water Flow Rate"
+    pin: GPIO13
+    # update_interval: 10s
+    unit_of_measurement: L/min
+    accuracy_decimals: 2
+    filters: 
+      - calibrate_linear:
+         method: least_squares
+         datapoints:
+          - 0.0 -> 0.0
+          - 378 -> 1.0
+    total:
+      name: "Total Pulses"
+      disabled_by_default: true
+
+  - platform: integration
+    device_class: water
+    state_class: total_increasing
+    name: "Water Consumption"
+    sensor: water_flow_meter
+    # restore: true
+    time_unit: min
+    unit_of_measurement: L
+    accuracy_decimals: 2
+
+i2c:
+  sda: GPIO15
+  frequency: 10kHz
+  scl: GPIO2
+  scan: true
+  id: bus_a

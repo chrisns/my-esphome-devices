@@ -2,18 +2,15 @@ substitutions:
   min_height: "62.1" # Min height + 0.1  (original one)
   max_height: "125.1" # Max height - 0.1
   name: desk
-  
+
 esphome:
   name: ${name}
-  platform: ESP32
-  board: esp32dev
   includes:
     - desk.h
   libraries:
     - chrisns/LoctekMotion_IoT_esphome
-  on_boot:
-    - button.press: button_empty
-
+  # on_boot:
+  #   - button.press: button_empty
 
 button:
   - platform: restart
@@ -24,11 +21,12 @@ button:
     id: button_preset1
     icon: mdi:numeric-1-box
     on_press:
-     - logger.log: "Executing Preset 1 command"
-     - switch.turn_on: virtual_screen
-     - uart.write:
-         id: desk_uart
-         data: [0x9b, 0x06, 0x02, 0x04, 0x00, 0xac, 0xa3, 0x9d]
+      - logger.log: "Executing Preset 1 command"
+      - switch.turn_on: virtual_screen
+      - delay: 100ms
+      - uart.write:
+          id: desk_uart
+          data: [0x9b, 0x06, 0x02, 0x04, 0x00, 0xac, 0xa3, 0x9d]
 
   - platform: template
     name: "Preset 2"
@@ -37,6 +35,7 @@ button:
     on_press:
       - logger.log: "Executing Preset 2 command"
       - switch.turn_on: virtual_screen
+      - delay: 100ms
       - uart.write:
           id: desk_uart
           data: [0x9b, 0x06, 0x02, 0x08, 0x00, 0xac, 0xa6, 0x9d]
@@ -48,6 +47,7 @@ button:
     on_press:
       - logger.log: "Executing Preset 3 command"
       - switch.turn_on: virtual_screen
+      - delay: 100ms
       - uart.write:
           id: desk_uart
           data: [0x9b, 0x06, 0x02, 0x10, 0x00, 0xac, 0xac, 0x9d]
@@ -160,10 +160,10 @@ sensor:
       on_value:
         then:
           - cover.template.publish:
-             id: desk
-             position: !lambda |-
-                 float position = (float(x) - float(${min_height})) / (float(${max_height}) - float(${min_height}));
-                 return position;
+              id: desk
+              position: !lambda |-
+                float position = (float(x) - float(${min_height})) / (float(${max_height}) - float(${min_height}));
+                return position;
 
   - platform: custom
     lambda: |-
@@ -243,13 +243,13 @@ switch:
       mode: OUTPUT
     restore_mode: ALWAYS_OFF
     internal: false
-    on_turn_on:
-     - delay: 12s  
-     - if:
-        condition:
-         binary_sensor.is_off : screen
-        then:
-        - switch.turn_off: virtual_screen
+    # on_turn_on:
+    #   - delay: 12s
+    #   - if:
+    #       condition:
+    #         binary_sensor.is_off: screen
+    #       then:
+    #         - switch.turn_off: virtual_screen
 
 cover:
   - platform: template
@@ -264,19 +264,24 @@ cover:
               id: desk_height
               below: 125.0
           then:
-          - logger.log: "Executing up command"
-          - button.press: button_up
-          - delay: 150ms
+            - logger.log: "Executing up command"
+            - button.press: button_up
+            - delay: 150ms
     close_action: # Move desk down
       - while:
           condition:
             sensor.in_range:
               id: desk_height
-              above: ${min_height} 
+              above: ${min_height}
           then:
-          - logger.log: "Executing down command"
-          - button.press: button_down
-          - delay: 150ms
+            - logger.log: "Executing down command"
+            - button.press: button_down
+            - delay: 150ms
 
 <<: !include ./includes/common.yaml
 <<: !include ./includes/bluetooth_proxy.yaml
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino

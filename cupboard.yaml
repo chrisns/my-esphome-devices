@@ -1,0 +1,5 @@
+substitutions:
+  name: cupboard
+
+<<: !include ./includes/common.yaml
+<<: !include ./includes/bluetooth_proxy.yaml

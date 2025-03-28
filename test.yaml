@@ -1,10 +1,50 @@
 substitutions:
-  name: loftbed
+  name: test
 
 <<: !include ./includes/common.yaml
-<<: !include ./includes/bluetooth_proxy.yaml
+# <<: !include ./includes/bluetooth_proxy.yaml
 
-# web_server:
+sensor:
+  # - platform: vl53l0x
+  #   name: "VL53L0x Distance"
+  #   address: 0x29
+  #   update_interval: 60s
+  #   long_range: true
+  #   timeout: 10000ms
+    # enable_pin: GPO
+  # - platform: pulse_counter
+  #   id: water_flow_meter
+  #   name: "Water Flow Rate"
+  #   pin: GPIO15
+  #   update_interval: 20s
+  #   unit_of_measurement: L/min
+  #   accuracy_decimals: 2
+  #   filters: 
+  #     - lambda: return (x / 27) * 60;
+  # - platform: integration
+  #   device_class: water
+  #   name: "Water Consumption"
+  #   sensor: water_flow_meter
+  #   time_unit: min
+  #   unit_of_measurement: L
+  #   accuracy_decimals: 2
+binary_sensor:
+  - platform: gpio
+    name: Hall Sensor 3144
+    pin:
+      number: GPIO13
+      mode: INPUT_PULLUP
+# i2c:
+#   sda: GPIO15
+#   frequency: 10kHz
+#   scl: GPIO2
+#   scan: true
+#   id: bus_a
+
+web_server:
+
+logger:
+  level: DEBUG
 # esp32_ble_tracker:
 
 # logger:

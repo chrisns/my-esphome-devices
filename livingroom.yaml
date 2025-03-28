@@ -1,0 +1,5 @@
+substitutions:
+  name: livingroom
+
+<<: !include ./includes/common.yaml
+<<: !include ./includes/bluetooth_proxy.yaml

@@ -1,0 +1,51 @@
+substitutions:
+  name: camtest
+
+<<: !include ./includes/common.yaml
+# <<: !include ./includes/bluetooth_proxy.yaml
+
+esp32_camera:
+  name: Print Cam
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  resolution: 1024x768
+
+logger:
+  level: DEBUG
+  baud_rate: 115200
+
+esp32_camera_web_server:
+  - port: 8081
+    mode: snapshot
+
+output:
+  - platform: gpio
+    pin: 4
+    id: flash
+
+  - platform: gpio
+    pin: 12
+    id: light_output
+
+light:
+  - platform: binary
+    restore_mode: ALWAYS_OFF
+    name: Print Cam Flash
+    id: cam_flash
+    output: flash
+
+  - platform: binary
+    name: "My Binary Light"
+    output: light_output
+    restore_mode: RESTORE_DEFAULT_OFF
+
+web_server:

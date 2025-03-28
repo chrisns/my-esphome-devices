@@ -4,3 +4,5 @@
 /.esphome/
 /.vscode/
 /secrets.yaml
+.pio
+build

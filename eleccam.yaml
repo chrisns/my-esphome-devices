@@ -1,0 +1,107 @@
+substitutions:
+  name: eleccam
+
+# <<: !include ./includes/common.yaml
+# <<: !include ./includes/bluetooth_proxy.yaml
+
+
+wifi:
+  use_address: ${name}.iot.cns.me
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  reboot_timeout: 15min
+  
+api:
+  reboot_timeout: 15min
+  encryption:
+    key: !secret encryption_key
+
+esphome:
+  name: ${name}
+
+esp32:
+  board: esp32dev
+  # framework:
+  #   type: esp-idf
+
+ota:
+  - platform: esphome
+    password: !secret device_password
+
+logger:
+  level: DEBUG
+  # baud_rate: 0
+
+sensor:
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+
+button:
+  - platform: restart
+    name: Restart
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+esp32_camera:
+  name: Elec Cam
+  external_clock:
+    pin: GPIO0
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  power_down_pin: GPIO32
+  resolution: 1024x768
+  # max_framerate: 1
+  aec_mode: manual
+  aec_value: 400
+  vertical_flip: false
+  # special_effect: NEGATIVE
+  agc_mode: manual
+  agc_value: 6
+  wb_mode: office
+  jpeg_quality: 10
+
+
+esp32_camera_web_server:
+  - port: 8081
+    mode: snapshot
+
+output:
+  - platform: gpio
+    pin: 4
+    id: light_output
+
+light:
+  - platform: esp32_rmt_led_strip
+    restore_mode: ALWAYS_OFF
+    rgb_order: GRB
+    pin: GPIO12
+    num_leds: 2
+    rmt_channel: 0
+    default_transition_length: 0s
+    chipset: ws2812
+    name: "Eleccam Light"
+    id: cam_flash
+    initial_state:
+      red: 100%
+      green: 75%
+      blue: 55%
+      brightness: 100%
+    on_turn_on:
+      - light.control:
+          id: cam_flash
+          red: 100%
+          green: 75%
+          blue: 55%
+          brightness: 85%
+      - delay: 45s
+      - light.turn_off: cam_flash
+

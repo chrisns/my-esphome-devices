@@ -2,17 +2,22 @@ substitutions:
   name: porchdisplay
   xscrollpadding: "4" # in pix
 
+# python3.12 -m pip install pillow==10.2.0  --break-system-packages
+
 esphome:
   name: ${name}
-  platform: ESP32
-  board: esp32dev
   on_boot:
-    - lambda: id(led_matrix_text).publish_state("ON");
-    - delay: 2s
+    # - lambda: id(led_matrix_text).publish_state("ON");
+    # - delay: 2s
     - lambda: id(led_matrix_text).publish_state("");
 
 <<: !include ./includes/common.yaml
 <<: !include ./includes/bluetooth_proxy.yaml
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
 
 button:
   - platform: restart

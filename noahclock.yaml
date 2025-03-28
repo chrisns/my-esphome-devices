@@ -3,11 +3,14 @@ substitutions:
 
 esphome:
   name: ${name}
-  platform: ESP32
-  board: esp32dev
 
 <<: !include ./includes/common.yaml
 <<: !include ./includes/bluetooth_proxy.yaml
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
 
 logger:
   level: DEBUG
@@ -30,7 +33,7 @@ sensor:
     icon: mdi:percent
     lambda: |
       return id(progress) < 0 ? 0 : id(progress);
-  - platform: bmp280
+  - platform: bmp280_i2c
     temperature:
       name: "Temperature"
     address: 0x76
@@ -103,7 +106,7 @@ number:
     name: "Weekday alarm"
     optimistic: true
     restore_value: true
-    initial_value: 7
+    initial_value: 7.25
     id: weekday_alarm
     min_value: 0
     max_value: 23
@@ -113,7 +116,7 @@ number:
     name: "Weekend alarm"
     optimistic: true
     restore_value: true
-    initial_value: 7.25
+    initial_value: 7.5
     id: weekend_alarm
     min_value: 0
     max_value: 23
@@ -123,7 +126,7 @@ number:
     name: "Evening Time"
     optimistic: true
     restore_value: true
-    initial_value: 18
+    initial_value: 18.5
     id: evening_time
     min_value: 0
     max_value: 23
@@ -160,6 +163,11 @@ display:
         if (id(progress) > 0.0 ) {
           color = Color(28, 0, 0);
           it.line(0, 0, floor(0.32 * id(progress)), 0, color);
+          //auto line_length = floor(0.32 * id(progress));
+          //if line_length === 1 {
+          //    color = Color(28, 0, 0); AMBER
+          //}
+          //it.line(0, 0, line_length, 0, color);
         } else {
           color = Color(0, 50, 0);
         }

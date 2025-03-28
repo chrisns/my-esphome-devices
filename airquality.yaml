@@ -45,11 +45,50 @@ sensor:
     #     - debounce: 10s
     update_interval: 30s
 
-switch:
-  - platform: gpio
-    pin: 
-      number: GPIO14
-    id: pms_set
-    name: "Start measuring"
+# switch:
+#   - platform: gpio
+#     pin: 
+#       number: GPIO14
+#     id: pms_set
+#     restore_mode: ALWAYS_ON
+#     name: "Start measuring"
+
+#   - platform: ble_client
+#     ble_client_id: luces_navidad 
+#     name: "Conexión Luces Navidad"
+#   - platform: template
+#     name: "Apagar Luces Navidad"
+#     turn_on_action:
+#       - ble_client.ble_write:
+#           id: luces_navidad
+#           service_uuid: 0000fff0-0000-1000-8000-00805f9b34fb
+#           characteristic_uuid: d44bc439-abfd-45a2-b575-925416129600
+#           # List of bytes to write.
+#           #value: [0x01, 0xab, 0xff] Example
+#           value: [0x79, 0xd1, 0xdb, 0xa4, 0x9, 0x19, 0xc2, 0x46, 0xa8, 0x58, 0x0a, 0xe7, 0xd1, 0x1b, 0x78, 0x84]
+#   - platform: template
+#     name: "Encender Luces Navidad"
+#     turn_on_action:
+#       - ble_client.ble_write:
+#           id: luces_navidad
+#           service_uuid: 0000fff0-0000-1000-8000-00805f9b34fb
+#           characteristic_uuid: d44bc439-abfd-45a2-b575-925416129600
+#           # List of bytes to write.
+#           #value: [0x01, 0xab, 0xff] Example
+#           value: [0x84, 0xdd, 0x50, 0x42, 0x37, 0x41, 0x50, 0x89, 0x7a, 0xc8, 0x2f, 0x39, 0x11, 0x9, 0x68, 0xa8]
 
 
+# 69:03:D4:75:1D:E6
+
+
+# ble_client:
+#   - mac_address: #REDACTED
+#     id: luces_navidad
+#     on_connect:
+#       then:
+#         - lambda: |-
+#             ESP_LOGD("ble_client_lambda", "Connected to BLE device");
+#     on_disconnect:
+#       then:
+#         - lambda: |-
+#             ESP_LOGD("ble_client_lambda", "Disconnected from BLE device");
