@@ -27,18 +27,48 @@ button:
     name: Door Open Message
     id: openmsg
     on_press:
+      - light.turn_on:
+          id: led_matrix_light
+          brightness: 100%
+          red: 100%
+          green: 100%
+          blue: 100%
       - lambda: id(led_matrix_text).publish_state("HELLO THERE");
       - delay: 2s
       - repeat:
           count: 20
-          then: 
+          then:
+            # OPEN - flashes red/cyan 3x
             - lambda: id(led_matrix_text).publish_state("OPEN");
-            - delay: 500ms
+            - light.turn_on: { id: led_matrix_light, red: 100%, green: 0%, blue: 0% }
+            - delay: 166ms
+            - light.turn_on: { id: led_matrix_light, red: 0%, green: 100%, blue: 100% }
+            - delay: 166ms
+            - light.turn_on: { id: led_matrix_light, red: 100%, green: 0%, blue: 0% }
+            - delay: 168ms
+            # DOOR - flashes yellow/blue 3x
             - lambda: id(led_matrix_text).publish_state("DOOR");
-            - delay: 500ms
+            - light.turn_on: { id: led_matrix_light, red: 100%, green: 100%, blue: 0% }
+            - delay: 166ms
+            - light.turn_on: { id: led_matrix_light, red: 0%, green: 0%, blue: 100% }
+            - delay: 166ms
+            - light.turn_on: { id: led_matrix_light, red: 100%, green: 100%, blue: 0% }
+            - delay: 168ms
+            # NOW - flashes green/magenta 3x
             - lambda: id(led_matrix_text).publish_state("NOW");
-            - delay: 500ms
+            - light.turn_on: { id: led_matrix_light, red: 0%, green: 100%, blue: 0% }
+            - delay: 166ms
+            - light.turn_on: { id: led_matrix_light, red: 100%, green: 0%, blue: 100% }
+            - delay: 166ms
+            - light.turn_on: { id: led_matrix_light, red: 0%, green: 100%, blue: 0% }
+            - delay: 168ms
       - lambda: id(led_matrix_text).publish_state(" ");
+      - light.turn_on:
+          id: led_matrix_light
+          brightness: 100%
+          red: 100%
+          green: 100%
+          blue: 100%
 
   - platform: template
     name: Please wait
